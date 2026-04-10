@@ -1,0 +1,24 @@
+<h2>Your card has been sold</h2>
+
+<p>Hello {{ seller.username }},</p>
+
+<p>Your card has been sold.</p>
+
+<p><strong>Order ID:</strong> {{ order.id }}</p>
+<p><strong>Card:</strong> {{ item.card.name }}</p>
+<p><strong>Quantity:</strong> {{ item.quantity }}</p>
+<p><strong>Unit Price:</strong> {{ item.unit_price }} EGP</p>
+
+<h3>Buyer</h3>
+<p>
+  {{ order.full_name }}<br>
+  {{ order.email }}<br>
+  {{ order.phone }}
+</p>
+
+<h3>Shipping Address</h3>
+<p>{{ order.address }}<br>{{ order.city }}</p>
+
+<p>Please prepare the order for fulfillment.</p>
+
+<p>Best regards,<br>TCG Egypt</p>

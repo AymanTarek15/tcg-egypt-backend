@@ -1,0 +1,22 @@
+Hello {{ seller.username }},
+
+Your card has been sold.
+
+Order ID: {{ order.id }}
+Card: {{ item.card.name }}
+Quantity: {{ item.quantity }}
+Unit Price: {{ item.unit_price }} EGP
+
+Buyer:
+{{ order.full_name }}
+{{ order.email }}
+{{ order.phone }}
+
+Shipping Address:
+{{ order.address }}
+{{ order.city }}
+
+Please prepare the order for fulfillment.
+
+Best regards,
+TCG Egypt

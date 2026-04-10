@@ -1,0 +1,23 @@
+<h2>Order Confirmation</h2>
+
+<p>Hello {{ order.full_name }},</p>
+
+<p>Thank you for your purchase.</p>
+
+<p><strong>Order ID:</strong> {{ order.id }}</p>
+<p><strong>Payment Method:</strong> {{ order.payment_method }}</p>
+<p><strong>Status:</strong> {{ order.status }}</p>
+
+<h3>Items</h3>
+<ul>
+  {% for item in items %}
+    <li>{{ item.card.name }} x {{ item.quantity }} — {{ item.unit_price }} EGP each</li>
+  {% endfor %}
+</ul>
+
+<h3>Shipping Address</h3>
+<p>{{ order.address }}<br>{{ order.city }}</p>
+
+<p><strong>Total:</strong> {{ order.total_price }} EGP</p>
+
+<p>Best regards,<br>TCG Egypt</p>

@@ -1,0 +1,23 @@
+Hello {{ order.full_name }},
+
+Thank you for your purchase.
+
+Order ID: {{ order.id }}
+Payment Method: {{ order.payment_method }}
+Status: {{ order.status }}
+
+Items:
+{% for item in items %}
+- {{ item.card.name }} x {{ item.quantity }} — {{ item.unit_price }} EGP each
+{% endfor %}
+
+Shipping Address:
+{{ order.address }}
+{{ order.city }}
+
+Total: {{ order.total_price }} EGP
+
+We will contact you if needed.
+
+Best regards,
+TCG Egypt
