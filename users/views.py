@@ -111,48 +111,20 @@ class LoginSerializer(TokenObtainPairSerializer):
         return token
 
     def validate(self, attrs):
-        login_value = attrs.get("username")
-        password = attrs.get("password")
+        data = super().validate(attrs)
 
-        if not login_value or not password:
-            raise serializers.ValidationError(
-                {"detail": "Username/email and password are required."}
-            )
-
-        try:
-            user = User.objects.get(
-                Q(username__iexact=login_value) | Q(email__iexact=login_value)
-            )
-        except User.DoesNotExist:
-            raise serializers.ValidationError({"detail": "Invalid credentials."})
-        except User.MultipleObjectsReturned:
-            raise serializers.ValidationError(
-                {"detail": "Multiple accounts matched this login. Please use your exact email."}
-            )
-
-        if not user.check_password(password):
-            raise serializers.ValidationError({"detail": "Invalid credentials."})
-
-        if not user.is_active:
-            raise serializers.ValidationError({"detail": "User account is disabled."})
-
-        if not user.is_verified:
+        if not self.user.is_verified:
             raise serializers.ValidationError(
                 {"detail": "Please verify your email before logging in."}
             )
 
-        refresh = self.get_token(user)
-
-        return {
-            "refresh": str(refresh),
-            "access": str(refresh.access_token),
-            "user": {
-                "id": user.id,
-                "username": user.username,
-                "email": user.email,
-                "is_verified": user.is_verified,
-            },
+        data["user"] = {
+            "id": self.user.id,
+            "username": self.user.username,
+            "email": self.user.email,
+            "is_verified": self.user.is_verified,
         }
+        return data
 
 
 class LoginView(TokenObtainPairView):
