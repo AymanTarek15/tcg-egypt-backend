@@ -13,9 +13,113 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import RegisterSerializer
 from .tokens import email_verification_token
 from .utils import send_verification_email
+from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
+
+from django.core.mail import send_mail
 
 User = get_user_model()
 
+
+
+class ForgotPasswordView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get("email")
+
+        if not email:
+            return Response(
+                {"detail": "Email is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user = User.objects.filter(email__iexact=email).first()
+
+        # 🔒 Do NOT reveal if email exists
+        if user:
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+
+            reset_url = (
+                f"{settings.FRONTEND_URL}/reset-password"
+                f"?uid={uid}&token={token}"
+            )
+
+            subject = "Reset your TCG Egypt password"
+
+            message = f"""
+Hello {user.username},
+
+We received a request to reset your password.
+
+Click the link below to reset your password:
+{reset_url}
+
+If you did not request this, you can ignore this email.
+""".strip()
+
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+
+        return Response(
+            {
+                "message": "If an account with that email exists, a reset link has been sent."
+            }
+        )
+
+
+
+class ResetPasswordConfirmView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        uid = request.data.get("uid")
+        token = request.data.get("token")
+        password = request.data.get("password")
+        confirm_password = request.data.get("confirm_password")
+
+        if not all([uid, token, password, confirm_password]):
+            return Response(
+                {"detail": "All fields are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if password != confirm_password:
+            return Response(
+                {"detail": "Passwords do not match."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            user_id = force_str(urlsafe_base64_decode(uid))
+            user = User.objects.get(pk=user_id)
+        except Exception:
+            return Response(
+                {"detail": "Invalid reset link."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not default_token_generator.check_token(user, token):
+            return Response(
+                {"detail": "Reset link is invalid or expired."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        user.set_password(password)
+        user.save(update_fields=["password"])
+
+        return Response(
+            {"message": "Password reset successfully."},
+            status=status.HTTP_200_OK,
+        )
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
