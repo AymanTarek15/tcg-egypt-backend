@@ -111,16 +111,25 @@ class LoginSerializer(TokenObtainPairSerializer):
         return token
 
     def validate(self, attrs):
-        username = attrs.get("username")
+        login_value = attrs.get("username")  # frontend can still send "username"
         password = attrs.get("password")
 
-        # 🔥 CASE-INSENSITIVE USER LOOKUP
+        if not login_value or not password:
+            raise serializers.ValidationError(
+                {"detail": "Username/email and password are required."}
+            )
+
         try:
-            user = User.objects.get(username__iexact=username)
+            user = User.objects.get(
+                Q(username__iexact=login_value) | Q(email__iexact=login_value)
+            )
         except User.DoesNotExist:
             raise serializers.ValidationError({"detail": "Invalid credentials."})
+        except User.MultipleObjectsReturned:
+            raise serializers.ValidationError(
+                {"detail": "Multiple accounts matched this login. Please use your email."}
+            )
 
-        # 🔥 CHECK PASSWORD MANUALLY
         if not user.check_password(password):
             raise serializers.ValidationError({"detail": "Invalid credentials."})
 
@@ -132,7 +141,7 @@ class LoginSerializer(TokenObtainPairSerializer):
                 {"detail": "Please verify your email before logging in."}
             )
 
-        # 🔥 FORCE correct username for token generation
+        # SimpleJWT expects the actual username field by default
         attrs["username"] = user.username
 
         data = super().validate(attrs)
@@ -143,7 +152,6 @@ class LoginSerializer(TokenObtainPairSerializer):
             "email": user.email,
             "is_verified": user.is_verified,
         }
-
         return data
 
 
