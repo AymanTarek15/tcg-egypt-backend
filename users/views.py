@@ -111,7 +111,7 @@ class LoginSerializer(TokenObtainPairSerializer):
         return token
 
     def validate(self, attrs):
-        login_value = attrs.get("username")  # frontend can still send "username"
+        login_value = attrs.get("username")
         password = attrs.get("password")
 
         if not login_value or not password:
@@ -127,7 +127,7 @@ class LoginSerializer(TokenObtainPairSerializer):
             raise serializers.ValidationError({"detail": "Invalid credentials."})
         except User.MultipleObjectsReturned:
             raise serializers.ValidationError(
-                {"detail": "Multiple accounts matched this login. Please use your email."}
+                {"detail": "Multiple accounts matched this login. Please use your exact email."}
             )
 
         if not user.check_password(password):
@@ -141,18 +141,18 @@ class LoginSerializer(TokenObtainPairSerializer):
                 {"detail": "Please verify your email before logging in."}
             )
 
-        # SimpleJWT expects the actual username field by default
-        attrs["username"] = user.username
+        refresh = self.get_token(user)
 
-        data = super().validate(attrs)
-
-        data["user"] = {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "is_verified": user.is_verified,
+        return {
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "is_verified": user.is_verified,
+            },
         }
-        return data
 
 
 class LoginView(TokenObtainPairView):
