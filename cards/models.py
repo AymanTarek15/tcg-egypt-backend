@@ -70,8 +70,13 @@ class YugiohCardSet(models.Model):
     set_rarity_code = models.CharField(max_length=50, blank=True)
     set_price = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
 
-    def __str__(self):
-        return f"{self.card.name} - {self.set_code}"
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["card", "set_code", "set_rarity"],
+                name="unique_card_version"
+            )
+        ]
 
 
 class CardCategory(models.Model):
