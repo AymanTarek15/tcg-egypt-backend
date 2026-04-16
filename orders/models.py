@@ -19,6 +19,7 @@ class City(models.Model):
 
 
 class Order(models.Model):
+  
     STATUS_CHOICES = [
         ("pending", "Pending"),
         ("confirmed", "Confirmed"),
@@ -40,7 +41,19 @@ class Order(models.Model):
         ("cancelled", "Cancelled"),
         ("refunded", "Refunded"),
     ]
+    
+    
+    seller = models.ForeignKey(
+      settings.AUTH_USER_MODEL,
+      on_delete=models.CASCADE,
+      related_name="seller_orders",
+      null=True,
+      blank=True,
+      )
 
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

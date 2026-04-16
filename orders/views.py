@@ -8,6 +8,7 @@ from .emails import (
     send_buyer_order_confirmation,
     send_seller_card_sold_email,
 )
+from .services import create_orders_from_cart
 
 
 class CityViewSet(viewsets.ReadOnlyModelViewSet):
@@ -29,32 +30,36 @@ class OrderViewSet(viewsets.ModelViewSet):
         )
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        order = serializer.save()
-
         try:
-            send_buyer_order_confirmation(order)
-        except Exception as e:
-            print("Buyer email failed:", str(e))
+            orders = create_orders_from_cart(
+                user=request.user,
+                checkout_data=request.data
+            )
 
-        try:
-            send_seller_card_sold_email(order)
-        except Exception as e:
-            print("Seller email failed:", str(e))
+            for order in orders:
+                try:
+                    send_buyer_order_confirmation(order)
+                except Exception as e:
+                    print("Buyer email failed:", str(e))
 
-        if order.payment_method == "card":
+                try:
+                    send_seller_card_sold_email(order)
+                except Exception as e:
+                    print("Seller email failed:", str(e))
+
+            serialized_orders = self.get_serializer(orders, many=True).data
+
             return Response(
                 {
-                    "message": "Order created. Card payment session should be created here.",
-                    "order_id": order.id,
-                    "payment_method": order.payment_method,
-                    "payment_status": order.payment_status,
+                    "message": "Orders created successfully",
+                    "count": len(orders),
+                    "orders": serialized_orders,
                 },
                 status=status.HTTP_201_CREATED,
             )
 
-        return Response(
-            self.get_serializer(order).data,
-            status=status.HTTP_201_CREATED
-        )
+        except ValueError as e:
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )

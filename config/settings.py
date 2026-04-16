@@ -14,6 +14,8 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
 
+EMAIL_TIMEOUT = 5  # seconds
+
 DEFAULT_FROM_EMAIL = config(
     "DEFAULT_FROM_EMAIL",
     default=f"TCG Egypt <{EMAIL_HOST_USER}>"
@@ -57,6 +59,7 @@ INSTALLED_APPS = [
     "rest_framework",
 
     "cards",
+    "cart",
     "orders",
     "content",
 ]
