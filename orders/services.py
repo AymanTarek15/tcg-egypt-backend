@@ -103,10 +103,15 @@ def create_orders_from_cart(user, checkout_data):
             if listing.is_sold:
                 raise ValueError(f"{listing.name} is already sold")
 
-            if listing.quantity < item.quantity:
-                raise ValueError(
-                    f"Requested quantity is not available for {listing.name}"
-                )
+            # if listing.quantity < item.quantity:
+            #     raise ValueError(
+            #         f"Requested quantity is not available for {listing.name}"
+            #     )
+            if listing.is_sold:
+              raise ValueError(f"{listing.name} is already sold")
+
+            if item.quantity > 1:
+              raise ValueError(f"You can only buy 1 of {listing.name}")
 
             OrderItem.objects.create(
                 order=order,
@@ -115,11 +120,13 @@ def create_orders_from_cart(user, checkout_data):
                 unit_price=listing.price,
             )
 
-            listing.quantity -= item.quantity
+            # listing.quantity -= item.quantity
 
-            if listing.quantity <= 0:
-                listing.quantity = 0
-                listing.is_sold = True
+            # if listing.quantity <= 0:
+            #     listing.quantity = 0
+            #     listing.is_sold = True
+            listing.quantity = 0
+            listing.is_sold = True
 
             listing.save()
 

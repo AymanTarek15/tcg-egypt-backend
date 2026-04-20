@@ -14,6 +14,29 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
 
+PAYMOB_SECRET_KEY = config("PAYMOB_SECRET_KEY")
+PAYMOB_PUBLIC_KEY = config("PAYMOB_PUBLIC_KEY", default="")
+PAYMOB_HMAC_SECRET = config("PAYMOB_HMAC_SECRET")
+PAYMOB_CARD_INTEGRATION_ID = config("PAYMOB_CARD_INTEGRATION_ID")
+# PAYMOB_SUCCESS_URL = config(
+#     "PAYMOB_SUCCESS_URL",
+#     default="https://tcg-egypt.com/points/success",
+# )
+# PAYMOB_FAILURE_URL = config(
+#     "PAYMOB_FAILURE_URL",
+#     default="https://tcg-egypt.com/points/failed",
+# )
+
+PAYMOB_SUCCESS_URL = config(
+    "PAYMOB_SUCCESS_URL",
+    default="http://localhost:3000/profile",
+)
+
+PAYMOB_FAILURE_URL = config(
+    "PAYMOB_FAILURE_URL",
+    default="http://localhost:3000/profile",
+)
+
 EMAIL_TIMEOUT = 5  # seconds
 
 DEFAULT_FROM_EMAIL = config(
@@ -61,6 +84,7 @@ INSTALLED_APPS = [
     "cards",
     "cart",
     "orders",
+    "points",
     "content",
 ]
 

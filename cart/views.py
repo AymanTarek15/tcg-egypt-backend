@@ -22,12 +22,11 @@ class AddToCartView(APIView):
 
     def post(self, request):
         listing_id = request.data.get("listing_id")
-        quantity = int(request.data.get("quantity", 1))
 
         if not listing_id:
             return Response(
                 {"error": "listing_id is required"},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
@@ -35,36 +34,43 @@ class AddToCartView(APIView):
         except CardListing.DoesNotExist:
             return Response(
                 {"error": "Listing not found"},
-                status=status.HTTP_404_NOT_FOUND
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         if listing.seller == request.user:
             return Response(
                 {"error": "You cannot add your own listing to cart"},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         if listing.is_sold:
             return Response(
                 {"error": "This listing is already sold"},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         cart, _ = Cart.objects.get_or_create(user=request.user)
 
-        cart_item, created = CartItem.objects.get_or_create(
+        already_in_cart = CartItem.objects.filter(
+            cart=cart,
+            listing=listing
+        ).exists()
+
+        if already_in_cart:
+            return Response(
+                {"error": "This card is already in your cart"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        CartItem.objects.create(
             cart=cart,
             listing=listing,
-            defaults={"quantity": quantity}
+            quantity=1,
         )
-
-        if not created:
-            cart_item.quantity += quantity
-            cart_item.save()
 
         return Response(
             {"message": "Added to cart successfully"},
-            status=status.HTTP_200_OK
+            status=status.HTTP_201_CREATED,
         )
 
 
