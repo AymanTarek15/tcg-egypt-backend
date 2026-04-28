@@ -5,6 +5,10 @@ from .utils import send_listing_created_email
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from .permissions import IsSellerOrReadOnly
 
+from django.conf import settings
+from django.db import transaction
+from points.services import consume_points
+
 
 from .models import CardCategory, CardListing, YugiohCard, YugiohCardSet
 from .serializers import (
@@ -153,7 +157,14 @@ class CardListingViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        serializer.save(seller=self.request.user)
+      with transaction.atomic():
+        listing = serializer.save(seller=self.request.user)
+
+        consume_points(
+            user=self.request.user,
+            required_points=settings.LISTING_POINT_COST,
+            description=f"Created listing: {listing.name}"
+        )
 
 
 class YugiohCardViewSet(viewsets.ReadOnlyModelViewSet):

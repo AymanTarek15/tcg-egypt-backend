@@ -14,6 +14,6 @@ urlpatterns = [
     path("packages/", PackageListView.as_view(), name="points-packages"),
     path("purchases/", PurchaseListView.as_view(), name="points-purchases"),
     path("purchase/start/", StartPointPurchaseView.as_view(), name="points-purchase-start"),
-    path("purchase/start/", StartPointPurchaseView.as_view(), name="points-purchase-start"),
+    # path("purchase/start/", StartPointPurchaseView.as_view(), name="points-purchase-start"),
     path("paymob/webhook/", PaymobPointWebhookView.as_view(), name="paymob-webhook"),
 ]

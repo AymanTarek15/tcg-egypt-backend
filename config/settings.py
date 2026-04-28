@@ -48,6 +48,9 @@ SERVER_EMAIL = DEFAULT_FROM_EMAIL
 FRONTEND_URL = config("FRONTEND_URL", default="http://localhost:3000")
 PASSWORD_RESET_TIMEOUT = 60 * 60 * 2
 
+
+LISTING_POINT_COST = config("LISTING_POINT_COST", default=20, cast=int)
+
 ALLOWED_HOSTS = [
     "tcg-egypt.com",
     "www.tcg-egypt.com",
@@ -84,8 +87,9 @@ INSTALLED_APPS = [
     "cards",
     "cart",
     "orders",
-    "points",
+    # "points",
     "content",
+    "points.apps.PointsConfig",
 ]
 
 MIDDLEWARE = [

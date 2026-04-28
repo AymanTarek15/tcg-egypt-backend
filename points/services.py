@@ -31,18 +31,31 @@ def get_or_create_wallet(user):
 
 
 @transaction.atomic
-def consume_points(wallet, required_points, description="Point usage"):
+def consume_points(user, required_points, description="Point usage"):
+    wallet = UserPointWallet.objects.select_for_update().get(user=user)
+
     total_available = wallet.free_points_balance + wallet.paid_points_balance
+
     if total_available < required_points:
         raise ValidationError("Not enough points.")
 
     remaining = required_points
 
-    if wallet.free_points_balance > 0:
-        free_used = min(wallet.free_points_balance, remaining)
-        wallet.free_points_balance -= free_used
-        remaining -= free_used
+    free_used = min(wallet.free_points_balance, remaining)
+    wallet.free_points_balance -= free_used
+    remaining -= free_used
 
+    paid_used = min(wallet.paid_points_balance, remaining)
+    wallet.paid_points_balance -= paid_used
+    remaining -= paid_used
+
+    wallet.save(update_fields=[
+        "free_points_balance",
+        "paid_points_balance",
+        "updated_at",
+    ])
+
+    if free_used:
         PointTransaction.objects.create(
             wallet=wallet,
             transaction_type="usage_free",
@@ -52,11 +65,7 @@ def consume_points(wallet, required_points, description="Point usage"):
             balance_paid_after=wallet.paid_points_balance,
         )
 
-    if remaining > 0:
-        paid_used = min(wallet.paid_points_balance, remaining)
-        wallet.paid_points_balance -= paid_used
-        remaining -= paid_used
-
+    if paid_used:
         PointTransaction.objects.create(
             wallet=wallet,
             transaction_type="usage_paid",
@@ -66,7 +75,6 @@ def consume_points(wallet, required_points, description="Point usage"):
             balance_paid_after=wallet.paid_points_balance,
         )
 
-    wallet.save(update_fields=["free_points_balance", "paid_points_balance", "updated_at"])
     return wallet
 
 
@@ -117,41 +125,7 @@ def reset_all_wallets_free_points():
         
         
         
-        
-
-
-def create_paymob_point_purchase_intention(purchase, user):
-    payload = {
-        # Fill using the exact fields required by your Paymob account setup
-        # amount, currency, merchant_order_id, allowed payment methods, billing data, etc.
-    }
-
-    headers = {
-        "Authorization": f"Token {settings.PAYMOB_SECRET_KEY}",
-        "Content-Type": "application/json",
-    }
-
-    response = requests.post(
-        settings.PAYMOB_INTENTION_URL,
-        json=payload,
-        headers=headers,
-        timeout=30,
-    )
-    response.raise_for_status()
-    data = response.json()
-
-    return {
-        **data,
-        "merchant_order_id": f"points_{purchase.id}",
-        "checkout_url": data.get("payment_keys", {}).get("hosted_url") or data.get("checkout_url"),
-    }
-    
-    
-    
-import requests
-from django.conf import settings
-
-from .models import PointPurchase
+      
 
 
 def create_paymob_point_purchase_intention(purchase, user):
